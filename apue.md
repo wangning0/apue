@@ -147,3 +147,189 @@
         #include <unistd.h>
         int chdir(const char *pathnname);
         int fchdir(int fd);
+        
+## 标准I／O 库
+* 对于标准I/O库，它们的操作是围绕流进行的。
+* 未定向的流上使用多字节I/O函数，则该流的定向设置为宽定向的，若使用了单字节I/O函数，则该流的定向为字节定向
+* fwide函数用于设置流的定向
+
+        #include<stdio.h>
+        #include <wchar.h>
+        int fwide(FILE *fp, int mode) //若流是宽定向，返回正值，若流是字节定向，返回负值，未定向返回0
+        //mode为正 宽定向 mode为负 字节定向 0 未定向
+        
+* 3种类型的缓冲  
+
+    * 全缓冲 填满标准I/O缓冲区后才进行实际的I/O操作
+    * 行缓冲 遇到换行符时，执行I/O操作
+    * 不带缓冲 不对字符进行缓冲存储
+ 
+* 当且仅当标准输入和标准输出不指向交互式设备时，全缓冲的
+* 标准错误绝不会是全缓冲的
+* 若是指向终端设备的流，则是行缓冲的，否则时全缓冲的
+* 更改缓冲类型
+
+        #include <stdio.h>
+        void setbuf(FILE *restrict fp, char *restrict buf);
+        int setvbuf(FILE *restrict fp, char *restrict buf, int mode, size_t size);
+        
+* 强制冲洗一个流
+
+        #include <stdio.h>
+        omt fflush(FILE *fp);
+        
+* 打开流
+
+        #include <stdio.h>
+        FILE *fopen(const char *pathname, const char *type);
+        FILE *freopen(const char *pathname, const char *type, FILE *fp);
+        FILE *fdopen(int fd, const char *type);
+        
+* 关闭流
+
+        #include <stdio.h>
+        int fclose(FILE *fp);
+        //在该文件被关闭之前，冲洗缓冲中的输出数据，缓冲区中的任何输入数据都被丢弃
+        
+* 输入函数
+
+        #include <stdio.h>
+        int getc(FILE *fp); //可作为宏
+        int fgetc(FILE *fp); //不可作为宏
+        int getchar(void); // getc(stdin);
+        
+        //从流中读取数据后，可以调用ungetc将字符再压送回流中
+        int ungetc(intc, FILE *fp);
+        //eg:
+        #include<stdio.h>
+        #include<ctype.h>
+        int main()
+        {
+            int i=0;
+            char ch;
+            puts("Input an integer followed by a char:");
+            // 读取字符直到遇到结束符或者非数字字符
+            while((ch = getchar()) != EOF && isdigit(ch))
+            {
+                i = 10 * i + ch - 48;  // 转为整数
+            }
+            // 如果不是数字，则放回缓冲区
+            if (ch != EOF)
+            {
+                ungetc(ch,stdin);  // 把一个字符退回输入流
+            }
+            printf("\n\ni = %d, next char in buffer = %c\n", i, getchar());
+            system("pause");
+            return 0;
+        }
+        
+* 输出函数
+        
+        #include <stdio.h>
+        int putc(int c. FILE *fp);
+        int fputs(int c ,FIle *fp);
+        int putchar(int c);
+        
+* 每次一行I/O
+
+
+        #include <stdio.h>
+        char *fgets(char *buf, int n, FILE *fp);
+        char *gets(char *buf); //不推荐使用 会造成缓冲区的溢出
+        //若成功返回buf，若已到达文件尾端或出错，返回NULL
+        #include<string.h>
+        #include<stdio.h>
+         
+        int main ( void )
+        {
+            FILE*stream;
+            char string[]="Thisisatest";
+            char msg[20];
+        /*openafileforupdate*/
+            stream=fopen("DUMMY.FIL","w+");
+        /*writeastringintothefile*/
+            fwrite(string,strlen(string),1,stream);
+        /*seektothestartofthefile*/
+            fseek(stream,0,SEEK_SET);
+        /*readastringfromthefile*/
+            fgets(msg,strlen(string)+1,stream);
+        /*displaythestring*/
+            printf("%s",msg);
+            fclose(stream);
+            return 0;
+        }
+        
+        // fputs 和puts 提供每次输出一行的功能
+        #include <stdio.h>
+        int fputs(const char *str, FILE *fp);
+        int puts(const char *str);
+        
+* 标准I/O库与直接调用read和write函数相比并不慢很多，对于大多数比较复杂的应用程序，最主要要的用户cpu时间是由应用本身的各种处理消耗的，而不是由标准I/O例程消耗的。
+* 定位流 有3种方法定位标准I/O
+
+        #include <stdio.h>
+        long ftell(FILE *fp);
+        int fseek(FILE *fp, long offset, int whence);
+        void rewind(FILE *fp);
+        
+* 格式化输出
+
+        #include <stdio.h>
+        
+        int printf(const char *restrict format,...);
+        int fprintf(FILE *restrict fp, const char *restrict format,...);
+        int dprintf(int fd, const char *restrict format);
+        //若成功 则返回输出字符数，错误则返回错值
+        int sprintf(char *restrict buf, const char *restrict format,...);
+        int snprintf(char *restrict buf, size_t n, const *restrict format,...);
+        //若缓冲区足够大，返回将要存入数组的字符数，若编码错误，返回负值
+        
+* 格式化输入
+
+        #include <stdio.h>
+        
+        int scanf(const char *restrict format,...);
+        int fscanf(FILE *restrict fp, const char *restrict format,...);
+        int sscanf(const char *restrict buf, const char *restrict format,...);
+       
+## 系统数据文件盒信息
+* passwd结构
+
+        struct passwd {
+            char *pw_name; //用户名
+            char *pw_passwd; //加密口令
+            uid_t pw_uid; //数值用户ID
+            gid_t pw_gid; //数值组ID
+            char *pw_gecos; //注释字段
+            char *pw_dir; //初始化工作目录
+            char *pw_shell; //初始化shell
+            char *pw_class; //用户访问类
+            time_t pw_change; //下次更改口令时间
+            time_t pw_expire; //账户有效期时间
+           }
+           
+* `finger -p username` 打印username的相关信息
+* getpwnam
+
+            #include <pwd.h>
+            #include <stddef.h>
+         17 #include <string.h>
+         16 #include <stdio.h>
+         15 struct passwd* getpwnam(const char *name) {
+         14     struct passwd *ptr;
+         13     setpwent();
+         12     while((ptr = getpwent()) != NULL) {
+         11         if(strcmp(name,ptr->pw_name) == 0)
+         10             break;
+          9     }
+          8     endpwent();
+          7     return ptr;
+          6 }
+          5
+          4 int main(int argc, char *argv[])
+          3 {
+          2     struct passwd *a;
+          1     a = getpwnam("wangning");
+        20      printf("%s",a->pw_passwd);
+          1     return 0;
+          2 }
