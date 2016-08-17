@@ -334,4 +334,35 @@
           1     return 0;
           2 }
           
-* 阴影口令，某些系统将加密口令存放在另一个通常称为
+* 阴影口令，某些系统将加密口令存放在另一个通常称为阴影口令的文件中
+* 例程是某个系统对外提供的功能接口和服务的集合
+## 进程环境
+* 当内核执行c程序时(使用一个exec函数)，在调用main前先调用一个特殊的启动例程。可执行程序文件将此启动例程指定为程序的起始地址，这是由连接编辑器设置的，而连接编辑器则由c编译器调用。启动例程丛内核取得命令行参数和环境变量值，然后为按上述方式调用main函数做好安排
+* 函数名是程序执行中，函数所占内存单元块的首地址的别称
+* 登记自动调用exit来终止的函数atexit
+
+        #include <stdlib.h>
+        int atexit(void(*func)(void));
+        
+* 栈是由操作系统自动分配释放，存放函数的参数值，局部变量的值等。其操作方式类似于数据结构中的栈，栈使用的是一级缓存，它们通常都是被调用时处于存储空间中，调用完毕立即释放，一种先进后出的数据结构
+* 堆(os)一般由程序员分配释放，若程序员不释放，程序结束时可能由os回收，存放在二级缓存中，生命周期由虚拟机的垃圾回收算法来决定，可以看成是一棵树。
+* 三个用于存储空间动态分配的函数
+
+         #include <stdlib.h>
+         void *malloc(size_t size);分配指定字节数的存储区
+         void *calloc(size_t nobj, size_t size);为指定数量指定长度的对象分配存储空间，该空间的每一位都初始化为0
+         void *realloc(void *ptr, size_t newsize);增加或减少以前分配区的长度，当增加长度时，可能需将以前分配区的内容移动到一个足够大的区域，以便在尾端提供增加的存储区，而新增区域内的初始值则不确定
+         
+         void free(vpid *ptr);
+         
+* 获取环境变量值
+
+        #include <stdlib.h>
+        char *getenv(const char *name);//返回name关联的value的指针
+* 三个函数的原型
+
+        #include <stdlib.h>
+        int putenv(char *str);
+        
+        int setenv(const char *name, const char *value, int rewrite);
+        int unsetenv(const char *name);
