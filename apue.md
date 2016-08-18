@@ -366,3 +366,33 @@
         
         int setenv(const char *name, const char *value, int rewrite);
         int unsetenv(const char *name);
+        
+* id为0的进程通常是调度进程，常常被称为交换进程，不执行任何磁盘上的程序，所以也被称为系统进程。
+* id为1的进程为init进程，在自举过程结束时由内核调用，它是一个普通的用户进程，它不是内核进程，但是它以超级用户特权运行
+* 返回标识符的函数
+
+        #include <unistd.h>
+        pid_t getpid(void); //调用进程的进程ID
+        pid_t getppid(void);//调用进程的父进程ID
+        uid_t getuid(void);//调用进程的实际用户ID
+        uid_t geteuid(void);//调用进程的有效用户ID
+        gid_t getgid(void);//调用进程的实际组用户ID
+        gid_t getegid(void);//调用进程的有效组ID
+        
+* 函数fork 一个现有的进程可以调用fork函数创建一个新进程
+
+        #include <unistd.h>
+        pid_t fork(void); 返回值，子进程返回0.，父亲进程返回子进程id，出错返回－1
+* sizeof()函数计算包括终止null字节的缓冲区长度，sizeof是在编译时加计算缓冲区长度
+* read函数和write函数是不带缓冲区的，标准I/O库是带缓冲的
+* 函数vfork 的调用序列和返回值与fork相同，vfork函数用于创建一个新进程，而该新进程的目的是exec一个新程序，vfork会保证子进程先运行在它调用exec或exit后父进程才能被调度运行
+* `_exit()`并不执行标准I/O缓冲区的冲洗操作，如果子进程关闭标准I/O流，那么表示标准输出FILE对象的相关存储区会清0，因为子进程借用了父进程的地址空间，所以父进程恢复运行并调用printf时，将不会产生任何输出
+* 在任意一种情况下，该终止进程的父进程都能用wait或者waitpid函数取得其终止状态
+* 对于父进程已经终止了的所有进程，他们的父进程都改变为init进程。我们称这些进程有init进程收养
+* `僵死进程` 一个已经终止，但是其父进程尚未对其进行善后处理(获取终止子进程的有关信息、释放它仍占用的资源)的进程
+* 当一个进程正常或异常终止时，内核就向其父进程发送`SIGCHLD`信号
+* 函数wait和waitpid
+
+        #include <sys/wait.h>
+        pid_t wait(int *statloc);
+        pid_t waitpid(pid_t pid, int *statloc, int options);
