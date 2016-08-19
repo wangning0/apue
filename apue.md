@@ -396,3 +396,37 @@
         #include <sys/wait.h>
         pid_t wait(int *statloc);
         pid_t waitpid(pid_t pid, int *statloc, int options);
+        //wait返回终止子进程的ID，statloc表示该子进程的状态
+        //waitpid 可等待一个特定的进程，而wait会返回任一终止子进程的状态
+        //waitpid提供了一个wait的非阻塞版本
+        //waitpid通过WUNTRACED WCONTINUED选项支持作业控制
+* 孤儿进程是指父进程在子进程结束之前先结束，则子进程就变成了孤儿进程
+* 僵死进程是指子进程在父进程结束之前先结束，但是父进程没有通过wait或waitpid来处理回收子进程，则该子进程成为僵死进程
+*  **利用两次fork解决僵尸进程**父进程一次fork()后产生一个子进程随后立即执行waitpid(子进程pid, NULL, 0)来等待子进程结束，然后子进程fork()后产生孙子进程随后立即exit(0)。这样子进程顺利终止（父进程仅仅给子进程收尸，并不需要子进程的返回值），然后父进程继续执行。这时的孙子进程由于失去了它的父进程（即是父进程的子进程），将被转交给Init进程托管。于是父进程与孙子进程无继承关系了，它们的父进程均为Init，Init进程在其子进程结束时会自动收尸，这样也就不会产生僵尸进程了。
+*  函数wait waitpid wait3 wait4后两个函数允许返回终止进程及其所有子进程使用的资源概况，包括用户cpu时间，系统cpu时间，缺页次数，接收到信号的次数等
+*  如果一个进程希望等待一个子进程终止，则它必须调用父进程的wait或waitpid函数，如果一个进程要等待其父进程终止，则可以使用下列形式的循环
+
+
+        while(getppid() != 1) 
+            sleep(1)
+        //这种形式的循环称为轮询(polling)浪费CPU时间
+* setbuf函数用于打开和关闭缓冲机制   
+* 当进程调用一种exec函数时，该进程执行的程序完全替换为新程序，而新程序则从其main函数开始执行，因为调用exec并不创建新进程，所以前后的进程ID不改变，**exec只是用磁盘上的一个新程序替换了当前进程的正文段、数据段、堆段和栈段**
+* exec函数
+
+          #include <unistd.h>
+          int execl(const char *path,const char *arg, ...);
+          int execlp(const char *file, const char *arg, ...);
+          int execle(const char *path,const char *arg,..., char * const envp[]);
+          int execv(const char *path,char *const argv[]);
+          int execvp(const char *file,char *const argv[]);
+          int execve(const char *file,char *const argv[],char *const envp[]);
+          int fexecve(int fd,char *const argv[], char *const envp[]);
+          后缀	操作能力
+            l	希望接收以逗号分隔的参数列表，列表以NULL指针作为结束标志
+            v	希望接收到一个以NULL结尾的字符串数组的指针
+            p	是一个以NULL结尾的字符串数组指针，函数可以DOS的PATH变量查找子程序文件
+            e	函数传递指定参数envp，允许改变子进程的环境，无后缀e时，子进程使用当前程序的环境
+            
+
+        
